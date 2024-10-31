@@ -1,14 +1,20 @@
--- CRIAÇÃO DAS TABELAS
-CREATE TABLE ContaReceber (
+-- Criando e utilizando o banco de dados
+CREATE DATABASE Loja;
+USE Loja;
+-- Criando as tabelas
+CREATE TABLE Estado(
 	ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	Cliente_ID INT NOT NULL,
-	FaturaVendaID INT,
-    DataConta DATE NOT NULL,
-    DataVencimento DATE NOT NULL,
-    Valor DECIMAL NOT NULL,
-    Situacao ENUM('1','2','3') NOT NULL
+    Nome VARCHAR(50) NOT NULL,
+    UF CHAR(2) NOT NULL
 );
-
+CREATE TABLE Municipio(
+	ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    Estado_ID INT NOT NULL,
+    Nome VARCHAR(80) NOT NULL,
+    CodIBGE INT NOT NULL,
+    FOREIGN KEY (Estado_ID) references Estado(ID) 
+    ON DELETE CASCADE
+);
 CREATE TABLE Cliente (
 	ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	Nome VARCHAR(80) NOT NULL,
@@ -18,191 +24,71 @@ CREATE TABLE Cliente (
     EndNumero VARCHAR(10) NOT NULL,
     EndMunicipio INT NOT NULL,
     EndCEP CHAR(8),
-    Municipio_ID INT NOT NULL
+    Municipio_ID INT NOT NULL,
+    FOREIGN KEY (Municipio_ID) REFERENCES
+    Municipio(ID) ON DELETE CASCADE
 );
-
-CREATE TABLE Municipio(
+CREATE TABLE ContaReceber (
 	ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    Estado_ID INT NOT NULL,
-    Nome VARCHAR(80) NOT NULL,
-    CodIBGE INT NOT NULL
-);
-
-CREATE TABLE Estado(
-	ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(50) NOT NULL,
-    UF CHAR(2) NOT NULL
+	Cliente_ID INT NOT NULL,
+	FaturaVendaID INT,
+    DataConta DATE NOT NULL,
+    DataVencimento DATE NOT NULL,
+    Valor DECIMAL NOT NULL,
+    Situacao ENUM('1','2','3') NOT NULL,
+    FOREIGN KEY (Cliente_ID) REFERENCES
+    Cliente(ID) ON DELETE CASCADE
 );
 
 -- INSERÇÃO DE DADOS NAS TABELAS
 
-INSERT INTO ContaReceber(
-	Cliente_ID,
-    FaturaVendaID,
-    DataConta,
-    DataVencimento,
-    Valor,
-    Situacao
-) VALUES(
-	1,
-    1235,
-    '21/05/2004',
-    '21/05/2005',
-    '18,2',
-    1
-);
+INSERT INTO Estado(Nome,UF)
+VALUES
+('São Paulo','SP'),
+('Minas Gerais','MG'),
+('Espírito Santo','ES'),
+('Rio de Janeiro','RJ');
 
-INSERT INTO ContaReceber(
-	Cliente_ID,
-    FaturaVendaID,
-    DataConta,
-    DataVencimento,
-    Valor,
-    Situacao
-) VALUES(
-	2,
-    2235,
-    '11/06/2004',
-    '11/06/2005',
-    '20,2',
-    2
-);
+SELECT * FROM Municipio;
 
-INSERT INTO ContaReceber(
-	Cliente_ID,
-    FaturaVendaID,
-    DataConta,
-    DataVencimento,
-    Valor,
-    Situacao
-) VALUES(
-	3,
-    4235,
-    '21/05/2020',
-    '21/05/2021',
-    '12,2',
-    3
-);
+INSERT INTO Municipio(Estado_ID,Nome,CodIBGE)
+VALUES
+(1,'Ipuã',123456),
+(2,'Uberaba',234567),
+(3,'Vitória',345678),
+(4,'Rio de Janeiro',456789);
 
-INSERT INTO Cliente(
-	Nome,
-	CPF,
-    Celular,
-    EndLogadouro,
-    EndNumero,
-    EndMunicipio,
-    EndCEP,
-    Municipio_ID
-) VALUES(
-	'Edney Araujo',
-    '12345678914',
-    '14512451248',
-    'Franca',
-    '654',
-    10,
-    '14555981'
-);
+INSERT INTO Cliente(Nome,CPF,Celular,EndLogadouro,
+EndNumero,EndMunicipio,EndCEP,Municipio_ID)
+VALUES
+('Edney Araujo',12345678910,03215467894,'Rua das Anilhas',
+'905',1,12345678,1),
+('Renan Silva',12345688911,33215477894,'Rua das Galinhas',
+'9005',2,12344678,2),
+('Yasmin Pereira',22445678910,33215477899,'Rua das Máquinas',
+'509',3,12245688,3),
+('Thaissa Campos',33557778910,33777477899,'Rua da Lua',
+'5009',4,22211188,4);
 
-INSERT INTO Cliente(
-	Nome,
-	CPF,
-    Celular,
-    EndLogadouro,
-    EndNumero,
-    EndMunicipio,
-    EndCEP,
-    Municipio_ID
-) VALUES(
-	'Alefe',
-    '12387467814',
-    '14546151248',
-    'São Paulo',
-    '555',
-    1,
-    '54813248'
-);
+INSERT INTO ContaReceber(Cliente_ID,FaturaVendaID,DataConta,DataVencimento,Valor,Situacao)
+VALUES
+(1,2035,'2020-05-05','2021-05-05',18.25,1),
+(2,1035,'2021-05-05','2022-05-05',17.25,2),
+(3,3035,'2022-05-05','2023-05-05',16.25,3),
+(4,4035,'2023-05-05','2024-05-05',18.25,1);
 
-INSERT INTO Cliente(
-	Nome,
-	CPF,
-    Celular,
-    EndLogadouro,
-    EndNumero,
-    EndMunicipio,
-    EndCEP,
-    Municipio_ID
-) VALUES(
-	'Clevyson',
-    '12917678914',
-    '14571951248',
-    'Campinas',
-    '666',
-    3,
-    '14671981'
-);
+-- Criando a VIEW para consultar ID da conta que não foi paga, nome e CPF do cliente vinculado à conta
 
-INSERT INTO Municipio(
-	ID,
-    Estado_ID,
-    Nome,
-    CodIBGE
-)VALUES(
-	10,
-    'SP',
-    'Franca',
-    '3'
-);
+CREATE VIEW NaoPagas AS
+SELECT cr.ID AS ContaID,
+c.Nome AS ClienteNome,
+c.CPF AS ClienteCPF,
+cr.DataVencimento,
+cr.Valor
+FROM ContaReceber cr
+JOIN
+Cliente c ON cr.Cliente_ID = c.ID
+WHERE 
+cr.Situacao = '1';
 
-INSERT INTO Municipio(
-	ID,
-    Estado_ID,
-    Nome,
-    CodIBGE
-)VALUES(
-	1,
-    'SP',
-    'São Paulo',
-    '1'
-);
-
-INSERT INTO Municipio(
-	ID,
-    Estado_ID,
-    Nome,
-    CodIBGE
-)VALUES(
-	3,
-    'SP',
-    'Campinas',
-    '5'
-);
-
-INSERT INTO Estado(
-	ID,
-    Nome,
-    UF
-)VALUES(
-	1,
-    'São Paulo',
-    'SP'
-);
-
-INSERT INTO Estado(
-	ID,
-    Nome,
-    UF
-)VALUES(
-	2,
-    'Tocantins',
-    'TO'
-);
-
-INSERT INTO Estado(
-	ID,
-    Nome,
-    UF
-)VALUES(
-	3,
-    'Santa Catarina',
-    'SC'
-);
+SELECT * FROM NaoPagas;
